@@ -1,0 +1,22 @@
+@startuml
+actor User
+participant Frontend
+participant Backend
+database Redis
+participant VKAPI
+
+User -> Frontend : Enter VK id
+Frontend -> Backend : Send VK id
+Backend -> Redis : Check if friend list is in cache
+alt Friend list is in cache
+    Redis --> Backend : Return friend list
+else Friend list is not in cache
+    Backend -> VKAPI : Fetch friend list
+    VKAPI --> Backend : Return friend list
+    Backend -> Redis : Store friend list in cache
+    Redis --> Backend : Confirm storage
+end
+Backend -> Backend : Compute friends of friends
+Backend --> Frontend : Send friends of friends data
+Frontend --> User : Visualize data
+@enduml
