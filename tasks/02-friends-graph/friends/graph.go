@@ -61,3 +61,11 @@ func (g *Graph) BFS(id user.Id, maxDepth int) []*Node {
 
 	return nodes
 }
+
+func (g *Graph) GetUsersFromGraph() []*user.User {
+	var users []*user.User
+	for _, node := range g.Nodes {
+		users = append(users, node.User)
+	}
+	return users
+}

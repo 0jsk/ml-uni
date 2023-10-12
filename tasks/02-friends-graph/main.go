@@ -2,24 +2,36 @@ package main
 
 import (
 	"fmt"
+	"friends-graph/friends"
+	"friends-graph/user"
 	"friends-graph/vk"
-	"log"
 	"net/http"
 )
 
 func main() {
-	httpClient := http.Client{}
 	token := "-"
 
-	service := vk.NewVKService(&httpClient, token)
+	httpClient := &http.Client{}
 
-	friends, err := service.GetFriendsList(177804866)
+	vkService := vk.NewVKService(httpClient, token)
+	graphService := friends.NewGraphService(vkService)
+
+	testUserId := user.Id(210700286)
+
+	user, err := vkService.GetUser(testUserId)
 	if err != nil {
-		log.Fatalf("Failed to fetch friend list: %v", err)
+		fmt.Printf("Failed to get user: %v\n", err)
+		return
+	}
+	fmt.Printf("Got user: %+v\n", user)
+
+	// Test building the friends graph
+	graph, err := graphService.BuildGraph(user, 3)
+	if err != nil {
+		fmt.Printf("Failed to build friends graph: %v\n", err)
+		return
 	}
 
-	fmt.Println("Friend list:")
-	for _, friend := range friends {
-		fmt.Println(friend)
-	}
+	users := graph.GetUsersFromGraph()
+	fmt.Printf("Got %d users in friends graph\n", len(users))
 }
