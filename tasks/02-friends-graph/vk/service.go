@@ -50,7 +50,7 @@ func NewVKService(httpClient *http.Client, token string) *Service {
 
 func (s *Service) GetUser(id user.Id) (*user.User, error) {
 	userMethodURL := fmt.Sprintf(
-		"https://api.vk.com/method/users.get?user_ids=%d&access_token=%s&v=5.154",
+		"https://api.vk.com/method/users.get?user_ids=%d&access_token=%s&name_case=nom&v=5.154",
 		id,
 		s.token)
 
