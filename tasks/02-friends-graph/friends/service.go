@@ -13,9 +13,9 @@ func NewGraphService(vkService *vk.Service) *GraphService {
 	return &GraphService{vkService: vkService}
 }
 
-func (s *GraphService) BuildGraph(id user.Id, maxDepth int) (*Graph, error) {
+func (s *GraphService) BuildGraph(initiator *user.User, maxDepth int) (*Graph, error) {
 	graph := NewGraph()
-	queue := []user.Id{id}
+	queue := []user.Id{initiator.Id}
 	visited := make(map[user.Id]bool)
 	depth := 0
 
@@ -32,13 +32,7 @@ func (s *GraphService) BuildGraph(id user.Id, maxDepth int) (*Graph, error) {
 		}
 
 		visited[id] = true
-
-		initialUser, err := s.vkService.GetUser(id)
-		if err != nil {
-			return nil, err
-		}
-
-		graph.AddNode(initialUser)
+		graph.AddNode(initiator)
 
 		friends, err := s.vkService.GetFriendsList(id)
 		if err != nil {
