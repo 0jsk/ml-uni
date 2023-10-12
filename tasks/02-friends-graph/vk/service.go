@@ -28,6 +28,10 @@ type FriendsResponse struct {
 	} `json:"response"`
 }
 
+type UserResponse struct {
+	Response []user.UserDTO `json:"response"`
+}
+
 type ServiceInterface interface {
 	GetFriendsList(id string) ([]user.User, error)
 }
@@ -42,6 +46,42 @@ func NewVKService(httpClient *http.Client, token string) *Service {
 		client: httpClient,
 		token:  token,
 	}
+}
+
+func (s *Service) GetUser(id user.Id) (*user.User, error) {
+	userMethodURL := fmt.Sprintf(
+		"https://api.vk.com/method/users.get?user_ids=%d&access_token=%s&v=5.154",
+		id,
+		s.token)
+
+	resp, err := s.client.Get(userMethodURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request to VK API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("received non-OK response status: %s", resp.Status)
+	}
+
+	var vkResp UserResponse
+	if err := json.NewDecoder(resp.Body).Decode(&vkResp); err != nil {
+		return nil, fmt.Errorf("failed to decode VK API response: %w", err)
+	}
+
+	if len(vkResp.Response) == 0 {
+		return nil, fmt.Errorf("no user found with id: %d", id)
+	}
+
+	respItem := vkResp.Response[0]
+
+	user := &user.User{
+		Id:       user.Id(vkResp.Response[0].Id),
+		Name:     fmt.Sprintf("%s %s", respItem.FirstName, respItem.LastName),
+		IsClosed: !respItem.CanAccessClosed && respItem.IsClosed,
+	}
+
+	return user, nil
 }
 
 func (s *Service) GetFriendsList(id user.Id) ([]user.User, error) {
